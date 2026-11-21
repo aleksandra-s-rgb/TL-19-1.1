@@ -7,11 +7,12 @@ export class FilterPage extends BasePage{
     readonly main: Locator
     readonly todoItem: Locator
     readonly itemCountSpan: Locator
-    readonly activateButtonOnFirstItem: Locator
+    readonly completeButtonOnFirstItem: Locator
     readonly allFilter:Locator
     readonly activeFilter:Locator
     readonly completedFilter:Locator
     readonly clearCompleted:Locator
+    readonly removeItemBtn: Locator
 
     constructor(page: Page) {
         super(page);
@@ -19,19 +20,28 @@ export class FilterPage extends BasePage{
         this.main = page.getByTestId('main');
         this.todoItem = this.main.getByTestId('todo-item');
         this.itemCountSpan = page.locator('.todo-count');
-        this.activateButtonOnFirstItem = this.todoItem.first().getByTestId('todo-item-toggle');
+        this.completeButtonOnFirstItem = this.todoItem.first().getByTestId('todo-item-toggle');
         this.allFilter = this.page.getByRole("link", {name: 'All'});
         this.activeFilter = this.page.getByRole("link", {name: 'Active'});
         this.completedFilter = this.page.getByRole("link", {name: 'Completed'});
         this.clearCompleted = page.locator('.clear-completed');
+        this.removeItemBtn = this.todoItem.getByTestId('todo-item-button');
     }
 
 
-    async itemIsVisible(): Promise<void> {
-        let todoItemsAll: Promise<Locator[]> =this.todoItem.all()
-        let item = this.main.getByTestId('todo-item');
-        for(item of await todoItemsAll){
-            await expect(item).toBeVisible();
+    async itemIsVisible(numberTodoItem: number): Promise<void> {
+        await expect(this.todoItem).toHaveCount(numberTodoItem)
+
+        if (numberTodoItem === 1) {
+            await expect(this.todoItem).toBeVisible();
+        }
+
+        if (numberTodoItem > 1) {
+            const todoItemsAll:Locator[]  = await this.todoItem.all();
+            let item = this.main.getByTestId('todo-item');
+            for (item of todoItemsAll) {
+                await expect(item).toBeVisible();
+            }
         }
     }
 
@@ -41,9 +51,9 @@ export class FilterPage extends BasePage{
         await expect(this.itemCountSpan).not.toBeVisible();
     }
 
-    async itemVisible(count: string): Promise<void> {
+    async itemVisible(numberItemCountSpan: number): Promise<void> {
         await expect(this.itemCountSpan).toBeVisible();
-        expect(await this.itemCountSpan.innerText()).toContain(count);
+        expect(await this.itemCountSpan.innerText()).toContain(String(numberItemCountSpan));
     }
 
     async todoItemCount(numberItemCountSpan: number, numberTodoItem:number): Promise<void> {
@@ -51,8 +61,8 @@ export class FilterPage extends BasePage{
         expect(await this.itemCountSpan.innerText()).toContain(String(numberItemCountSpan));
     }
 
-    async activateItem(numberItemCountSpan: number, numberTodoItem:number): Promise<void> {
-        await this.activateButtonOnFirstItem.click();
+    async completeItem(numberItemCountSpan: number, numberTodoItem:number): Promise<void> {
+        await this.completeButtonOnFirstItem.click();
         expect(await this.itemCountSpan.innerText()).toContain(String(numberItemCountSpan));
         expect(await this.todoItem.count()).toBe(numberTodoItem);
     }
@@ -75,5 +85,16 @@ export class FilterPage extends BasePage{
         await this.completedFilter.click();
         expect(await this.todoItem.count()).toBe(numberTodoItem);
         expect(await this.todoItem.innerText()).toBe(text);
+    }
+
+    async allItemsFilter(allItemsNumber: number):Promise<void> {
+        await this.allFilter.click();
+        expect(await this.todoItem.count()).toBe(allItemsNumber);
+    }
+
+    async removeItem(): Promise<void> {
+        await this.todoItem.hover();
+        await this.removeItemBtn.hover();
+        await this.removeItemBtn.click();
     }
 }

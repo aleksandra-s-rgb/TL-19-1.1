@@ -12,14 +12,15 @@ test.describe("ToDo app tests", () => {
 
     test('TL-19-1 Create one Todo item', async ({ page }) => {
         await filterPage.textFill('test todo item');
-        await filterPage.itemIsVisible();
+        await filterPage.itemIsVisible(1);
     });
 
     test('TL-19-2 Create two Todo items', async ({ page }) => {
         await filterPage.itemNotVisible();
         await filterPage.textFill('test todo item');
         await filterPage.textFill('test todo item 2');
-        await filterPage.itemVisible('2');
+        await filterPage.itemIsVisible(2);
+        await filterPage.itemVisible(2);
 
     });
 
@@ -28,7 +29,7 @@ test.describe("ToDo app tests", () => {
         await filterPage.textFill('test todo item 1');
         await filterPage.textFill('test todo item 2');
         await filterPage.todoItemCount(2, 2)
-        await filterPage.activateItem(1, 2)
+        await filterPage.completeItem(1, 2)
         await filterPage.clearItem(1)
 
     });
@@ -37,7 +38,7 @@ test.describe("ToDo app tests", () => {
         await filterPage.itemNotVisible();
         await filterPage.textFill('activated');
         await filterPage.textFill('not activated')
-        await filterPage.activateItem(1, 2);
+        await filterPage.completeItem(1, 2);
         await filterPage.activateItemFilter(1, 1, 'not activated');
         await filterPage.completedItemFilter(1, 'activated')
     });
@@ -45,16 +46,29 @@ test.describe("ToDo app tests", () => {
     test('TL-19-5 Create one Todo item -> activate it', async ({ page }) => {
         await filterPage.itemNotVisible();
         await filterPage.textFill('test todo item');
-        await filterPage.activateItem(0, 1)
+        await filterPage.completeItem(0, 1)
 
     });
 
     test('TL-19-6 Create one Todo item -> delete it', async ({ page }) => {
         await filterPage.itemNotVisible();
         await filterPage.textFill('test todo item');
-        await filterPage.activateItem(0, 1)
-        await filterPage.clearItem(0)
+        await filterPage.removeItem();
         await filterPage.itemNotVisible()
+
+    });
+
+    test('TL-19_7 Test All, active and completed filters', async ({page})=>{
+        await filterPage.itemNotVisible();
+        await filterPage.textFill('test todo item');
+        await filterPage.textFill('test todo item 2');
+        await filterPage.itemIsVisible(2);
+        await filterPage.itemVisible(2);
+        await filterPage.completeItem(1, 2)
+        await filterPage.completedItemFilter(1, 'test todo item')
+        await filterPage.activateItemFilter(1,1, 'test todo item 2')
+        await filterPage.allItemsFilter(2)
+        await filterPage.itemIsVisible(2)
 
     });
 });
