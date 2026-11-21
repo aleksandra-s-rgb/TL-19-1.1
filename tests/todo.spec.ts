@@ -1,96 +1,62 @@
 import { test, expect } from '@playwright/test';
+import {FilterPage} from "../pom/pages/FilterPage";
 
 test.describe("ToDo app tests", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-  })
+    let filterPage: FilterPage
+    test.beforeEach(async ({ page }) => {
+        filterPage = new FilterPage(page)
+        await page.goto('/');
 
-  test('TL-19-1 Create one Todo item', async ({ page }) => {
-    const todoInput = page.getByTestId('text-input');
-    const main = page.getByTestId('main');
-    const todoItem = main.getByTestId('todo-item');
 
-    await expect(todoItem).not.toBeVisible();
-    await todoInput.fill('test todo item');
-    await todoInput.press('Enter');
-    await expect(todoItem).toBeVisible();
-  });
+    })
 
-  test('TL-19-2 Create two Todo items', async ({ page }) => {
-    const todoInput = page.getByTestId('text-input');
-    const itemCountSpan = page.locator('.todo-count');
+    test('TL-19-1 Create one Todo item', async ({ page }) => {
+        await filterPage.textFill('test todo item');
+        await filterPage.itemIsVisible();
+    });
 
-    await expect(itemCountSpan).not.toBeVisible();
-    await todoInput.fill('test todo item');
-    await todoInput.press('Enter');
-    await todoInput.fill('test todo item 2');
-    await todoInput.press('Enter');
-    expect(await itemCountSpan.innerText()).toContain('2');
+    test('TL-19-2 Create two Todo items', async ({ page }) => {
+        await filterPage.itemNotVisible();
+        await filterPage.textFill('test todo item');
+        await filterPage.textFill('test todo item 2');
+        await filterPage.itemVisible('2');
 
-    /*
-    const countText = await itemCountSpan.innerText();
-    const splitResult = countText.split(' ');
-    const countNumber = Number(splitResult[0]);
-    expect(countNumber).toBe(2);
+    });
 
-    expect(countText.includes('2')).toBeTruthy();
-    */
-  });
+    test('TL-19-3 Create two Todo items -> activate 1 -> click "clear completed"', async ({ page }) => {
+        await filterPage.itemNotVisible();
+        await filterPage.textFill('test todo item 1');
+        await filterPage.textFill('test todo item 2');
+        await filterPage.todoItemCount(2, 2)
+        await filterPage.activateItem(1, 2)
+        await filterPage.clearItem(1)
 
-  test('TL-19-3 Create two Todo items -> activate 1 -> click "clear completed"', async ({ page }) => {
-    const todoInput = page.getByTestId('text-input');
-    const main = page.getByTestId('main');
-    const todoItem = main.getByTestId('todo-item');
-    const itemCountSpan = page.locator('.todo-count');
-    const activateButtonOnFirstItem = todoItem.first().getByTestId('todo-item-toggle');
-    const clearCompletedButton = page.locator('.clear-completed');
+    });
 
-    await expect(todoItem).not.toBeVisible();
-    await todoInput.fill('test todo item 1');
-    await todoInput.press('Enter');
-    await todoInput.fill('test todo item 2');
-    await todoInput.press('Enter');
-    expect(await todoItem.count()).toBe(2);
-    expect(await itemCountSpan.innerText()).toContain('2');
-    await activateButtonOnFirstItem.click();
-    expect(await itemCountSpan.innerText()).toContain('1');
-    expect(await todoItem.count()).toBe(2);
-    await clearCompletedButton.click();
-    expect(await itemCountSpan.innerText()).toContain('1');
-    expect(await todoItem.count()).toBe(1);
-  });
+    test('TL-19-4 Create two Todo items -> set active filter -> activate 1 -> check 1 on completed filter', async ({ page }) => {
+        await filterPage.itemNotVisible();
+        await filterPage.textFill('activated');
+        await filterPage.textFill('not activated')
+        await filterPage.activateItem(1, 2);
+        await filterPage.activateItemFilter(1, 1, 'not activated');
+        await filterPage.completedItemFilter(1, 'activated')
+    });
 
-  test('TL-19-4 Create two Todo items -> set active filter -> activate 1 -> check 1 on completed filter', async ({ page }) => {
-    const todoInput = page.getByTestId('text-input');
-    const main = page.getByTestId('main');
-    const todoItem = main.getByTestId('todo-item');
-    const itemCountSpan = page.locator('.todo-count');
-    const activateButtonOnFirstItem = todoItem.first().getByTestId('todo-item-toggle');
-    const activeFilter = page.getByRole("link", {name: 'Active'});
-    const completedFilter = page.getByRole("link", {name: 'Completed'});
+    test('TL-19-5 Create one Todo item -> activate it', async ({ page }) => {
+        await filterPage.itemNotVisible();
+        await filterPage.textFill('test todo item');
+        await filterPage.activateItem(0, 1)
 
-    await expect(todoItem).not.toBeVisible();
-    await todoInput.fill('activated');
-    await todoInput.press('Enter');
-    await todoInput.fill('not activated');
-    await todoInput.press('Enter');
-    expect(await todoItem.count()).toBe(2);
-    await activeFilter.click();
-    await activateButtonOnFirstItem.click();
-    expect(await itemCountSpan.innerText()).toContain('1');
-    expect(await todoItem.count()).toBe(1);
-    expect(await todoItem.innerText()).toBe('not activated');
-    await completedFilter.click();
-    expect(await todoItem.count()).toBe(1);
-    expect(await todoItem.innerText()).toBe('activated');
-  });
+    });
 
-  test('TL-19-5 Create one Todo item -> activate it', async ({ page }) => {
-    // add test
-  });
+    test('TL-19-6 Create one Todo item -> delete it', async ({ page }) => {
+        await filterPage.itemNotVisible();
+        await filterPage.textFill('test todo item');
+        await filterPage.activateItem(0, 1)
+        await filterPage.clearItem(0)
+        await filterPage.itemNotVisible()
 
-  test('TL-19-6 Create one Todo item -> delete it', async ({ page }) => {
-    // add test
-  });
+    });
 });
+
 
